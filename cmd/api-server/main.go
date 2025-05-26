@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -19,7 +20,7 @@ func main() {
 	handler := newServiceHandler(db)
 
 	server := httpserver.NewMux(httpserver.HttpServerOpt{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%s", cfg.Port),
 		Handler: handler,
 	})
 

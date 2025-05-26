@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"log"
+
+	"github.com/gustialfian/transfer-system-golang/internal/modules/money"
 )
 
 type AccountService struct {
@@ -11,23 +13,23 @@ type AccountService struct {
 }
 
 type AccountRepo interface {
-	Create(ctx context.Context, data AccountCreate) error
-	byId(ctx context.Context, accountId int) (Account, error)
+	Create(ctx context.Context, data AccountCreateParams) error
+	ById(ctx context.Context, accountId int) (AccountRow, error)
 }
 
 type AccountCreate struct {
 	AccountId      int    `json:"account_id"`
-	InitialBalance uint64 `json:"initial_balance"`
+	InitialBalance string `json:"initial_balance"`
 }
 
 type Account struct {
 	AccountId      int    `json:"account_id"`
-	InitialBalance uint64 `json:"initial_balance"`
+	InitialBalance string `json:"initial_balance"`
 }
 
 var (
 	ErrAccountCreateFailed = errors.New("account creation fail")
-	ErrAccountByIdFailed   = errors.New("account creation fail")
+	ErrAccountByIdFailed   = errors.New("account by id fail")
 )
 
 func NewAccountService(repo AccountRepo) *AccountService {
@@ -35,7 +37,18 @@ func NewAccountService(repo AccountRepo) *AccountService {
 }
 
 func (svc *AccountService) Create(ctx context.Context, data AccountCreate) error {
-	if err := svc.repo.Create(ctx, data); err != nil {
+	var params AccountCreateParams
+	params.AccountId = data.AccountId
+
+	initialBalance, err := money.StringToInt(data.InitialBalance, money.Scale)
+	if err != nil {
+		log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
+		return ErrAccountCreateFailed
+	}
+	params.InitialBalance = initialBalance
+	params.ScaleBalance = money.Scale
+
+	if err := svc.repo.Create(ctx, params); err != nil {
 		log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
 		return ErrAccountCreateFailed
 	}
@@ -43,10 +56,16 @@ func (svc *AccountService) Create(ctx context.Context, data AccountCreate) error
 }
 
 func (svc *AccountService) ById(ctx context.Context, accountId int) (Account, error) {
-	data, err := svc.repo.byId(ctx, accountId)
+	row, err := svc.repo.ById(ctx, accountId)
 	if err != nil {
 		log.Printf("%s: %s\n", ErrAccountByIdFailed, err)
-		return data, ErrAccountByIdFailed
+		return Account{}, ErrAccountByIdFailed
+	}
+
+	initialBalance := money.IntToString(row.InitialBalance, row.ScaleBalance)
+	data := Account{
+		AccountId:      row.AccountId,
+		InitialBalance: initialBalance,
 	}
 
 	return data, nil
