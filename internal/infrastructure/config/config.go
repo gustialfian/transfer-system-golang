@@ -15,17 +15,24 @@ type Config struct {
 	PostgresUser     string
 	PostgresPassword string
 	PostgresDBName   string
+
+	IsTigerBeetleOn    bool
+	TigerbeetleAddress string
 }
 
 // LoadConfig initializes and returns a pointer to a Config struct populated with
 // values from environment variables.
 func LoadConfig() *Config {
+	isTigerBeetleOn := getEnv("FEATURE_FLAG_TIGERBEETLE", "OFF") == "ON"
 	return &Config{
 		Port:             getEnv("APP_PORT", "8000"),
 		PostgresHost:     getEnv("POSTGRES_HOST", "localhost"),
 		PostgresUser:     getEnv("POSTGRES_USER", ""),
 		PostgresPassword: getEnv("POSTGRES_PASSWORD", ""),
 		PostgresDBName:   getEnv("POSTGRES_DBNAME", ""),
+
+		IsTigerBeetleOn:    isTigerBeetleOn,
+		TigerbeetleAddress: getEnv("TIGERBEETLE_ADDRESS", ""),
 	}
 }
 

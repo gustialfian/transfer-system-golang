@@ -31,3 +31,8 @@ type AccountUpdateBalanceParams struct {
 	AccountId int
 	Balance   int
 }
+
+type AccountTBRepo interface {
+	CreateAccount(accountId int) error
+	CreateTransaction(debitAccountId int, creditAccountId int, amount int) error
+}

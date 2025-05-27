@@ -10,6 +10,9 @@ import (
 func TestAccountService_Create(t *testing.T) {
 	type fields struct {
 		repo AccountRepo
+
+		isTigerBeetleOn bool
+		tigerbeetleRepo AccountTBRepo
 	}
 	type args struct {
 		ctx  context.Context
@@ -65,10 +68,28 @@ func TestAccountService_Create(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "success - tigerbeetle",
+			fields: fields{
+				repo: &fakeAccountRepo{
+					CreateFunc: func(ctx context.Context, data AccountCreateParams) error { return nil },
+				},
+				isTigerBeetleOn: true,
+				tigerbeetleRepo: &fakeAccountTBRepo{
+					CreateAccountFunc:     func(accountId int) error { return nil },
+					CreateTransactionFunc: func(debitAccountId, creditAccountId, amount int) error { return nil },
+				},
+			},
+			args: args{
+				ctx:  t.Context(),
+				data: AccountCreate{AccountId: 1, InitialBalance: "100.23344"},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewAccountService(tt.fields.repo)
+			svc := NewAccountService(tt.fields.repo, tt.fields.tigerbeetleRepo, tt.fields.isTigerBeetleOn)
 			if err := svc.Create(tt.args.ctx, tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("AccountService.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -79,6 +100,9 @@ func TestAccountService_Create(t *testing.T) {
 func TestAccountService_ById(t *testing.T) {
 	type fields struct {
 		repo AccountRepo
+
+		isTigerBeetleOn bool
+		tigerbeetleRepo AccountTBRepo
 	}
 	type args struct {
 		ctx       context.Context
@@ -129,7 +153,7 @@ func TestAccountService_ById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewAccountService(tt.fields.repo)
+			svc := NewAccountService(tt.fields.repo, tt.fields.tigerbeetleRepo, tt.fields.isTigerBeetleOn)
 			got, err := svc.ById(tt.args.ctx, tt.args.accountId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AccountService.ById() error = %v, wantErr %v", err, tt.wantErr)
@@ -158,4 +182,17 @@ func (f *fakeAccountRepo) ById(ctx context.Context, accountId int) (AccountRow, 
 
 func (f *fakeAccountRepo) UpdateBalance(ctx context.Context, params AccountUpdateBalanceParams) error {
 	return f.UpdateBalanceFunc(ctx, params)
+}
+
+type fakeAccountTBRepo struct {
+	CreateAccountFunc     func(accountId int) error
+	CreateTransactionFunc func(debitAccountId int, creditAccountId int, amount int) error
+}
+
+func (f *fakeAccountTBRepo) CreateAccount(accountId int) error {
+	return f.CreateAccountFunc(accountId)
+}
+
+func (f *fakeAccountTBRepo) CreateTransaction(debitAccountId int, creditAccountId int, amount int) error {
+	return f.CreateTransactionFunc(debitAccountId, creditAccountId, amount)
 }

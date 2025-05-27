@@ -13,6 +13,9 @@ import (
 type TransactionService struct {
 	repo        TransactionRepo
 	accountRepo account.AccountRepo
+
+	isTigerBeetleOn bool
+	tigerbeetleRepo TransactionTBRepo
 }
 
 var (
@@ -25,8 +28,8 @@ var (
 )
 
 // NewTransactionService creates a new TransactionService with the given dependency.
-func NewTransactionService(repo TransactionRepo, accountRepo account.AccountRepo) *TransactionService {
-	return &TransactionService{repo, accountRepo}
+func NewTransactionService(repo TransactionRepo, accountRepo account.AccountRepo, tigerbeetleRepo TransactionTBRepo, isTigerBeetleOn bool) *TransactionService {
+	return &TransactionService{repo, accountRepo, isTigerBeetleOn, tigerbeetleRepo}
 }
 
 // TransactionCreate represents the required information to create a new transaction
@@ -101,6 +104,13 @@ func (svc *TransactionService) Create(ctx context.Context, data TransactionCreat
 	if err := svc.repo.Create(ctx, params); err != nil {
 		log.Printf("%s: %s\n", ErrTransactionCreateFailed, err)
 		return ErrTransactionCreateFailed
+	}
+
+	if svc.isTigerBeetleOn {
+		if err := svc.tigerbeetleRepo.CreateTransaction(data.DestinationAccountId, data.SourceAccountId, amount); err != nil {
+			log.Printf("%s: %s\n", ErrTransactionCreateFailed, err)
+			return ErrTransactionCreateFailed
+		}
 	}
 
 	return nil

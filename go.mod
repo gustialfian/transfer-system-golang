@@ -7,6 +7,7 @@ require github.com/jmoiron/sqlx v1.4.0
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/lib/pq v1.10.9
+	github.com/tigerbeetle/tigerbeetle-go v0.16.41
 )
 
 require (

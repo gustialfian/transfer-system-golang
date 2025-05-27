@@ -13,6 +13,9 @@ import (
 // AccountService encapsulates account-related operations and business logic.
 type AccountService struct {
 	repo AccountRepo
+
+	isTigerBeetleOn bool
+	tigerbeetleRepo AccountTBRepo
 }
 
 // AccountCreate represents the parameters required to create a new account.
@@ -34,8 +37,8 @@ var (
 )
 
 // NewAccountService creates a new AccountService with the given repository.
-func NewAccountService(repo AccountRepo) *AccountService {
-	return &AccountService{repo}
+func NewAccountService(repo AccountRepo, tigerbeetleRepo AccountTBRepo, isTigerBeetleOn bool) *AccountService {
+	return &AccountService{repo, isTigerBeetleOn, tigerbeetleRepo}
 }
 
 // Create creates a new account with the specified initial balance.
@@ -61,6 +64,19 @@ func (svc *AccountService) Create(ctx context.Context, data AccountCreate) error
 		log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
 		return ErrAccountCreateFailed
 	}
+
+	if svc.isTigerBeetleOn {
+		if err := svc.tigerbeetleRepo.CreateAccount(data.AccountId); err != nil {
+			log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
+			return ErrAccountCreateFailed
+		}
+
+		if err := svc.tigerbeetleRepo.CreateTransaction(data.AccountId, 1, initialBalance); err != nil {
+			log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
+			return ErrAccountCreateFailed
+		}
+	}
+
 	return nil
 }
 

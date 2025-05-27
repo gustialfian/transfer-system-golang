@@ -16,3 +16,7 @@ type TransactionCreateParams struct {
 	Amount               int
 	AmountScale          int
 }
+
+type TransactionTBRepo interface {
+	CreateTransaction(debitAccountId int, creditAccountId int, amount int) error
+}
