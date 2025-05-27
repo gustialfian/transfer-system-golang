@@ -5,26 +5,14 @@ import (
 	"errors"
 	"log"
 
-	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
-	"github.com/gustialfian/transfer-system-golang/internal/modules/money"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/account"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/money"
 )
 
 // TransactionService provides methods for managing transactions.
 type TransactionService struct {
 	repo        TransactionRepo
 	accountRepo account.AccountRepo
-}
-
-// TransactionRepo defines the interface for transaction repository operations.
-type TransactionRepo interface {
-	Create(ctx context.Context, data TransactionCreateParams) error
-}
-
-// TransactionCreate represents the required information to create a new transaction
-type TransactionCreate struct {
-	SourceAccountId      int    `json:"source_account_id"`
-	DestinationAccountId int    `json:"destination_account_id"`
-	Amount               string `json:"amount"`
 }
 
 var (
@@ -39,6 +27,13 @@ var (
 // NewTransactionService creates a new TransactionService with the given dependency.
 func NewTransactionService(repo TransactionRepo, accountRepo account.AccountRepo) *TransactionService {
 	return &TransactionService{repo, accountRepo}
+}
+
+// TransactionCreate represents the required information to create a new transaction
+type TransactionCreate struct {
+	SourceAccountId      int    `json:"source_account_id"`
+	DestinationAccountId int    `json:"destination_account_id"`
+	Amount               string `json:"amount"`
 }
 
 // Create executes a transaction by validating input, checking balances, updating accounts, and recording the transaction.

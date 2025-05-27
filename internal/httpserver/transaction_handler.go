@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gustialfian/transfer-system-golang/internal/modules/transaction"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/transaction"
 )
 
 // TransactionHandler is interface that ServiceHandler use to integrate with TransactionService

@@ -7,20 +7,20 @@ import (
 
 	"github.com/gustialfian/transfer-system-golang/internal/config"
 	"github.com/gustialfian/transfer-system-golang/internal/db"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/account"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/transaction"
 	"github.com/gustialfian/transfer-system-golang/internal/httpserver"
-	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
-	"github.com/gustialfian/transfer-system-golang/internal/modules/transaction"
 )
 
 func main() {
 	cfg := config.LoadConfig()
 
-	db := db.MustNewPostgreSQL(cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresHost, cfg.PostgresDBName)
+	dbConn := db.MustNewPostgreSQL(cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresHost, cfg.PostgresDBName)
 
-	accountRepo := account.NewAccountDB(db)
+	accountRepo := db.NewAccountDB(dbConn)
 	accountSvc := account.NewAccountService(accountRepo)
 
-	transactionRepo := transaction.NewTransactionDB(db)
+	transactionRepo := db.NewTransactionDB(dbConn)
 	transactionSvc := transaction.NewTransactionService(transactionRepo, accountRepo)
 
 	handler := &httpserver.ServiceHandler{

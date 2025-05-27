@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/account"
 )
 
 // AccountHandler is interface that ServiceHandler use to integrate with AccountService

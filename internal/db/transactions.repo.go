@@ -1,9 +1,10 @@
-package transaction
+package db
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/gustialfian/transfer-system-golang/internal/domains/transaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -12,21 +13,13 @@ type TransactionDB struct {
 	db *sqlx.DB
 }
 
-// AccountCreateParams holds the parameters required to create a new transaction.
-type TransactionCreateParams struct {
-	SourceAccountId      int
-	DestinationAccountId int
-	Amount               int
-	AmountScale          int
-}
-
 // NewAccountDB creates and returns a new instance of TransactionDB
 func NewTransactionDB(db *sqlx.DB) *TransactionDB {
 	return &TransactionDB{db}
 }
 
 // Create inserts a new transaction record into the transactions table with the provided parameters.
-func (db *TransactionDB) Create(ctx context.Context, params TransactionCreateParams) error {
+func (db *TransactionDB) Create(ctx context.Context, params transaction.TransactionCreateParams) error {
 	q := `
 	INSERT INTO transactions (source_account_id, destination_account_id, amount, scale_amount, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, NOW(), NOW())`

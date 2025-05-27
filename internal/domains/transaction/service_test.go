@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/account"
 )
 
 func TestTransactionService_Create(t *testing.T) {

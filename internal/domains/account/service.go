@@ -7,20 +7,12 @@ import (
 	"errors"
 	"log"
 
-	"github.com/gustialfian/transfer-system-golang/internal/modules/money"
+	"github.com/gustialfian/transfer-system-golang/internal/domains/money"
 )
 
 // AccountService encapsulates account-related operations and business logic.
 type AccountService struct {
 	repo AccountRepo
-}
-
-// AccountRepo defines the interface for account data persistence.
-// Implementations of this interface handle the actual data storage and retrieval.
-type AccountRepo interface {
-	Create(ctx context.Context, data AccountCreateParams) error
-	ById(ctx context.Context, accountId int) (AccountRow, error)
-	UpdateBalance(ctx context.Context, params AccountUpdateBalanceParams) error
 }
 
 // AccountCreate represents the parameters required to create a new account.
