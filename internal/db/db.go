@@ -1,3 +1,4 @@
+// Package db hold implementation detail on how app will integrate with database
 package db
 
 import (
@@ -16,6 +17,10 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
+// MustNewPostgreSQL establishes a connection to a PostgreSQL database using the provided
+// user credentials, host, and database name. It applies any pending database migrations
+// from the embedded migrations filesystem. If any error occurs during migration or connection,
+// the function logs the error and terminates the application.
 func MustNewPostgreSQL(user, pass, host, dbname string) *sqlx.DB {
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable&TimeZone=UTC",
 		user, pass, host, dbname,

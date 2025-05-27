@@ -7,10 +7,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// TransactionDB provides methods for interacting with the transactions table in the database.
 type TransactionDB struct {
 	db *sqlx.DB
 }
 
+// AccountCreateParams holds the parameters required to create a new transaction.
 type TransactionCreateParams struct {
 	SourceAccountId      int
 	DestinationAccountId int
@@ -18,10 +20,12 @@ type TransactionCreateParams struct {
 	AmountScale          int
 }
 
+// NewAccountDB creates and returns a new instance of TransactionDB
 func NewTransactionDB(db *sqlx.DB) *TransactionDB {
 	return &TransactionDB{db}
 }
 
+// Create inserts a new transaction record into the transactions table with the provided parameters.
 func (db *TransactionDB) Create(ctx context.Context, params TransactionCreateParams) error {
 	q := `
 	INSERT INTO transactions (source_account_id, destination_account_id, amount, scale_amount, created_at, updated_at)

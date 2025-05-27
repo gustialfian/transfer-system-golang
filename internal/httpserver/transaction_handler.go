@@ -9,6 +9,7 @@ import (
 	"github.com/gustialfian/transfer-system-golang/internal/modules/transaction"
 )
 
+// TransactionHandler is interface that ServiceHandler use to integrate with TransactionService
 type TransactionHandler interface {
 	Create(ctx context.Context, data transaction.TransactionCreate) error
 }

@@ -207,7 +207,7 @@ func TestTransactionService_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewAccountService(tt.fields.repo, tt.fields.accountRepo)
+			svc := NewTransactionService(tt.fields.repo, tt.fields.accountRepo)
 			if err := svc.Create(tt.args.ctx, tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("TransactionService.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}

@@ -11,6 +11,7 @@ import (
 	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
 )
 
+// AccountHandler is interface that ServiceHandler use to integrate with AccountService
 type AccountHandler interface {
 	Create(ctx context.Context, data account.AccountCreate) error
 	ById(ctx context.Context, accountId int) (account.Account, error)

@@ -1,3 +1,5 @@
+// Package account provides business logic for interacting with accounts,
+// including creation, retrieval, and balance management.
 package account
 
 import (
@@ -8,24 +10,29 @@ import (
 	"github.com/gustialfian/transfer-system-golang/internal/modules/money"
 )
 
+// AccountService encapsulates account-related operations and business logic.
 type AccountService struct {
 	repo AccountRepo
 }
 
+// AccountRepo defines the interface for account data persistence.
+// Implementations of this interface handle the actual data storage and retrieval.
 type AccountRepo interface {
 	Create(ctx context.Context, data AccountCreateParams) error
 	ById(ctx context.Context, accountId int) (AccountRow, error)
 	UpdateBalance(ctx context.Context, params AccountUpdateBalanceParams) error
 }
 
+// AccountCreate represents the parameters required to create a new account.
 type AccountCreate struct {
-	AccountId      int    `json:"account_id"`
-	InitialBalance string `json:"initial_balance"`
+	AccountId      int    `json:"account_id"`      // Unique identifier for the account.
+	InitialBalance string `json:"initial_balance"` // Initial balance as a string (e.g., "100.00").
 }
 
+// Account represents an account with its ID and balance.
 type Account struct {
-	AccountId      int    `json:"account_id"`
-	InitialBalance string `json:"initial_balance"`
+	AccountId      int    `json:"account_id"`      // Unique identifier for the account.
+	InitialBalance string `json:"initial_balance"` // Balance as a string (e.g., "100.00").
 }
 
 var (
@@ -34,10 +41,12 @@ var (
 	ErrAccountInitialBalanceNegative = errors.New("account initial balance negative")
 )
 
+// NewAccountService creates a new AccountService with the given repository.
 func NewAccountService(repo AccountRepo) *AccountService {
 	return &AccountService{repo}
 }
 
+// Create creates a new account with the specified initial balance.
 func (svc *AccountService) Create(ctx context.Context, data AccountCreate) error {
 	initialBalance, err := money.StringToInt(data.InitialBalance, money.Scale)
 	if err != nil {
@@ -63,6 +72,7 @@ func (svc *AccountService) Create(ctx context.Context, data AccountCreate) error
 	return nil
 }
 
+// ById retrieves an account by its ID.
 func (svc *AccountService) ById(ctx context.Context, accountId int) (Account, error) {
 	row, err := svc.repo.ById(ctx, accountId)
 	if err != nil {

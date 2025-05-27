@@ -21,7 +21,7 @@ func main() {
 	accountSvc := account.NewAccountService(accountRepo)
 
 	transactionRepo := transaction.NewTransactionDB(db)
-	transactionSvc := transaction.NewAccountService(transactionRepo, accountRepo)
+	transactionSvc := transaction.NewTransactionService(transactionRepo, accountRepo)
 
 	handler := &httpserver.ServiceHandler{
 		Account:     accountSvc,
