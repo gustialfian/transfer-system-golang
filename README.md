@@ -82,7 +82,7 @@ This structure separates domain logic from infrastructure code, following Clean 
 ### Setting Up TigerBeetle (Optional)
 TigerBeetle is an ultra-fast, distributed financial ledger database. To experiment with TigerBeetle, follow these steps:
 
-1. Download TigerBeetle Get the latest release from [TigerBeetle Releases](https://github.com/tigerbeetle/tigerbeetle/releases).
+1. Download TigerBeetle Get v0.16.41 from [TigerBeetle Releases](https://github.com/tigerbeetle/tigerbeetle/releases).
 2. Format the Database `tigerbeetle format --cluster=0 --replica=0 --replica-count=1 --development ./0_0.tigerbeetle`
 3. Start the TigerBeetle Server `tigerbeetle start --addresses=3000 --development ./0_0.tigerbeetle`
 4. Open the TigerBeetle REPL `tigerbeetle repl --cluster=0 --addresses=3000`
@@ -92,6 +92,8 @@ TigerBeetle is an ultra-fast, distributed financial ledger database. To experime
    export FEATURE_FLAG_TIGERBEETLE="ON"
    export TIGERBEETLE_ADDRESS="3000"
    ```
+7. Set up environment variables: `source .env`.
+8. Run the app: `go run cmd/api-server/main.go`.
 
 For more details, see the [TigerBeetle documentation](https://docs.tigerbeetle.com/).
 
