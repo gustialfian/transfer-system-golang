@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -20,40 +19,46 @@ type AccountHandler interface {
 func (h *ServiceHandler) accountCreate(w http.ResponseWriter, r *http.Request) {
 	var body account.AccountCreate
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		writeJSON(w, http.StatusBadRequest, appResponse{
+			Error: "bad request",
+		})
 		return
 	}
 
 	err := h.Account.Create(r.Context(), body)
 	if err != nil {
 		if errors.Is(err, account.ErrAccountInitialBalanceNegative) {
-			http.Error(w, "account initial balance is negative", http.StatusBadRequest)
+			writeJSON(w, http.StatusBadRequest, appResponse{
+				Error: "account initial balance is negative",
+			})
 		} else {
-			http.Error(w, "bad request", http.StatusBadRequest)
+			writeJSON(w, http.StatusBadRequest, appResponse{
+				Error: "bad request",
+			})
 		}
 		return
 	}
+
+	writeJSON(w, http.StatusOK, appResponse{Message: "account created"})
 }
 
 func (h *ServiceHandler) accountById(w http.ResponseWriter, r *http.Request) {
 	accountIdStr := r.PathValue("account_id")
 	accountId, err := strconv.Atoi(accountIdStr)
 	if err != nil {
-		http.Error(w, "invalid account_id", http.StatusBadRequest)
+		writeJSON(w, http.StatusBadRequest, appResponse{
+			Error: "invalid account_id",
+		})
 		return
 	}
 
 	data, err := h.Account.ById(r.Context(), accountId)
 	if err != nil {
-		slog.Error(err.Error())
-		http.Error(w, "account not found", http.StatusNotFound)
+		writeJSON(w, http.StatusNotFound, appResponse{
+			Error: "account not found",
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		slog.Error(err.Error())
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
+	writeJSON(w, http.StatusOK, appResponse{Data: data})
 }

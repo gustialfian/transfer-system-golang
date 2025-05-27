@@ -5,6 +5,7 @@
 package httpserver
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 )
@@ -30,4 +31,20 @@ func NewMux(addr string, h *ServiceHandler) *http.Server {
 type ServiceHandler struct {
 	Account     AccountHandler
 	Transaction TransactionHandler
+}
+
+// appResponse represents a standard HTTP JSON response structure.
+type appResponse struct {
+	Message string `json:"message,omitempty"`
+	Data    any    `json:"data,omitempty"`
+	Error   string `json:"error,omitempty"`
+}
+
+// writeJSON writes the given appResponse as a JSON-encoded HTTP response with the specified status code.
+func writeJSON(w http.ResponseWriter, statusCode int, resp appResponse) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, `{"error":"failed to encode response"}`, http.StatusInternalServerError)
+	}
 }

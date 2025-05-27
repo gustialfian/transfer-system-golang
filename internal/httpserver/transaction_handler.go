@@ -17,27 +17,29 @@ type TransactionHandler interface {
 func (h *ServiceHandler) transactionCreate(w http.ResponseWriter, r *http.Request) {
 	var body transaction.TransactionCreate
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		writeJSON(w, http.StatusBadRequest, appResponse{Error: "bad request"})
 		return
 	}
 
 	err := h.Transaction.Create(r.Context(), body)
 	if err != nil {
 		if errors.Is(err, transaction.ErrTransactionSourceAccountNotFound) {
-			http.Error(w, "transaction source account not found", http.StatusBadRequest)
+			writeJSON(w, http.StatusNotFound, appResponse{Error: "transaction source account not found"})
 
 		} else if errors.Is(err, transaction.ErrTransactionDestinationAccountNotFound) {
-			http.Error(w, "transaction destination account not found", http.StatusBadRequest)
+			writeJSON(w, http.StatusNotFound, appResponse{Error: "transaction destination account not found"})
 
 		} else if errors.Is(err, transaction.ErrTransactionSourceBalanceNotEnough) {
-			http.Error(w, "transaction source balance not enough", http.StatusBadRequest)
+			writeJSON(w, http.StatusBadRequest, appResponse{Error: "transaction source balance not enough"})
 
 		} else if errors.Is(err, transaction.ErrTransactionSourceDestinationSame) {
-			http.Error(w, "transaction source and destination account can not be the same", http.StatusBadRequest)
+			writeJSON(w, http.StatusBadRequest, appResponse{Error: "transaction source and destination account can not be the same"})
 
 		} else {
-			http.Error(w, "bad request", http.StatusBadRequest)
+			writeJSON(w, http.StatusBadRequest, appResponse{Error: "bad request"})
 		}
 		return
 	}
+
+	writeJSON(w, http.StatusOK, appResponse{Message: "transaction created"})
 }
