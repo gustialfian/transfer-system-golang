@@ -5,18 +5,7 @@ import (
 	"time"
 )
 
-type HttpServerOpt struct {
-	Addr    string
-	Handler *ServiceHandler
-}
-
-type ServiceHandler struct {
-	Account     AccountHandler
-	Transaction TransactionHandler
-}
-
-func NewMux(opt HttpServerOpt) *http.Server {
-	h := opt.Handler
+func NewMux(addr string, h *ServiceHandler) *http.Server {
 	r := http.NewServeMux()
 
 	r.HandleFunc("POST /accounts", h.accountCreate)
@@ -24,8 +13,13 @@ func NewMux(opt HttpServerOpt) *http.Server {
 	r.HandleFunc("POST /transactions", h.transactionCreate)
 
 	return &http.Server{
-		Addr:              opt.Addr,
+		Addr:              addr,
 		Handler:           r,
 		ReadHeaderTimeout: 1 * time.Second,
 	}
+}
+
+type ServiceHandler struct {
+	Account     AccountHandler
+	Transaction TransactionHandler
 }

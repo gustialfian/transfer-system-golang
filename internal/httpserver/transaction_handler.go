@@ -3,7 +3,7 @@ package httpserver
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
+	"errors"
 	"net/http"
 
 	"github.com/gustialfian/transfer-system-golang/internal/modules/transaction"
@@ -22,8 +22,21 @@ func (h *ServiceHandler) transactionCreate(w http.ResponseWriter, r *http.Reques
 
 	err := h.Transaction.Create(r.Context(), body)
 	if err != nil {
-		slog.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		if errors.Is(err, transaction.ErrTransactionSourceAccountNotFound) {
+			http.Error(w, "transaction source account not found", http.StatusBadRequest)
+
+		} else if errors.Is(err, transaction.ErrTransactionDestinationAccountNotFound) {
+			http.Error(w, "transaction destination account not found", http.StatusBadRequest)
+
+		} else if errors.Is(err, transaction.ErrTransactionSourceBalanceNotEnough) {
+			http.Error(w, "transaction source balance not enough", http.StatusBadRequest)
+
+		} else if errors.Is(err, transaction.ErrTransactionSourceDestinationSame) {
+			http.Error(w, "transaction source and destination account can not be the same", http.StatusBadRequest)
+
+		} else {
+			http.Error(w, "bad request", http.StatusBadRequest)
+		}
 		return
 	}
 }

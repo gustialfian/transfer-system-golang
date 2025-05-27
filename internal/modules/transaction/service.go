@@ -5,11 +5,13 @@ import (
 	"errors"
 	"log"
 
+	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
 	"github.com/gustialfian/transfer-system-golang/internal/modules/money"
 )
 
 type TransactionService struct {
-	repo TransactionRepo
+	repo        TransactionRepo
+	accountRepo account.AccountRepo
 }
 
 type TransactionRepo interface {
@@ -28,28 +30,84 @@ type Transaction struct {
 	Amount               string `json:"amount"`
 }
 
-var ErrTransactionCreateFailed = errors.New("transaction creation fail")
+var (
+	ErrTransactionCreateFailed               = errors.New("transaction creation fail")
+	ErrTransactionSourceAccountNotFound      = errors.New("transaction source account not found")
+	ErrTransactionDestinationAccountNotFound = errors.New("transaction destination account not found")
+	ErrTransactionSourceBalanceNotEnough     = errors.New("transaction source balance not enough")
+	ErrTransactionSourceBalanceNegative      = errors.New("transaction source balance negative")
+	ErrTransactionSourceDestinationSame      = errors.New("transaction source and destination account can not be the same")
+)
 
-func NewAccountService(repo TransactionRepo) *TransactionService {
-	return &TransactionService{repo}
+func NewAccountService(repo TransactionRepo, accountRepo account.AccountRepo) *TransactionService {
+	return &TransactionService{repo, accountRepo}
 }
 
 func (svc *TransactionService) Create(ctx context.Context, data TransactionCreate) error {
-	var params TransactionCreateParams
-	params.SourceAccountId = data.SourceAccountId
-	params.DestinationAccountId = data.DestinationAccountId
-
 	amount, err := money.StringToInt(data.Amount, money.Scale)
+	if err != nil {
+		log.Printf("%s: %s\n", money.ErrMoneyParseFail, err)
+		return money.ErrMoneyParseFail
+	}
+
+	if amount < 0 {
+		log.Printf("%s\n", ErrTransactionSourceBalanceNegative)
+		return ErrTransactionSourceBalanceNegative
+	}
+
+	if data.SourceAccountId == data.DestinationAccountId {
+		log.Printf("%s\n", ErrTransactionSourceDestinationSame)
+		return ErrTransactionSourceDestinationSame
+	}
+
+	destinationAccount, err := svc.accountRepo.ById(ctx, data.DestinationAccountId)
+	if err != nil {
+		log.Printf("%s: %s\n", ErrTransactionDestinationAccountNotFound, err)
+		return ErrTransactionDestinationAccountNotFound
+	}
+
+	sourceAccount, err := svc.accountRepo.ById(ctx, data.SourceAccountId)
+	if err != nil {
+		log.Printf("%s: %s\n", ErrTransactionSourceAccountNotFound, err)
+		return ErrTransactionSourceAccountNotFound
+	}
+
+	destinationBalance := destinationAccount.Balance + amount
+	sourceBalance := sourceAccount.Balance - amount
+	if sourceBalance < 0 {
+		log.Printf("%s\n", ErrTransactionSourceBalanceNotEnough)
+		return ErrTransactionSourceBalanceNotEnough
+	}
+
+	err = svc.accountRepo.UpdateBalance(ctx, account.AccountUpdateBalanceParams{
+		AccountId: data.SourceAccountId,
+		Balance:   sourceBalance,
+	})
 	if err != nil {
 		log.Printf("%s: %s\n", ErrTransactionCreateFailed, err)
 		return ErrTransactionCreateFailed
 	}
-	params.Amount = amount
-	params.AmountScale = money.Scale
+
+	err = svc.accountRepo.UpdateBalance(ctx, account.AccountUpdateBalanceParams{
+		AccountId: data.DestinationAccountId,
+		Balance:   destinationBalance,
+	})
+	if err != nil {
+		log.Printf("%s: %s\n", ErrTransactionCreateFailed, err)
+		return ErrTransactionCreateFailed
+	}
+
+	params := TransactionCreateParams{
+		SourceAccountId:      data.SourceAccountId,
+		DestinationAccountId: data.DestinationAccountId,
+		Amount:               amount,
+		AmountScale:          money.Scale,
+	}
 
 	if err := svc.repo.Create(ctx, params); err != nil {
 		log.Printf("%s: %s\n", ErrTransactionCreateFailed, err)
 		return ErrTransactionCreateFailed
 	}
+
 	return nil
 }

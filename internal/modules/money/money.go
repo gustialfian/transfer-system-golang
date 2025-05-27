@@ -1,12 +1,15 @@
 package money
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
 )
 
 const Scale int = 5
+
+var ErrMoneyParseFail = errors.New("money parse fail")
 
 func StringToInt(val string, scale int) (int, error) {
 	valFloat, err := strconv.ParseFloat(val, 64)
@@ -21,5 +24,5 @@ func StringToInt(val string, scale int) (int, error) {
 func IntToString(val int, scale int) string {
 	scaleMod := math.Pow10(scale)
 	result := float64(val) / scaleMod
-	return fmt.Sprintf("%.6f", result)
+	return fmt.Sprintf("%.5f", result)
 }

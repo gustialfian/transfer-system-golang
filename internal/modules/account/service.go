@@ -15,6 +15,7 @@ type AccountService struct {
 type AccountRepo interface {
 	Create(ctx context.Context, data AccountCreateParams) error
 	ById(ctx context.Context, accountId int) (AccountRow, error)
+	UpdateBalance(ctx context.Context, params AccountUpdateBalanceParams) error
 }
 
 type AccountCreate struct {
@@ -28,8 +29,9 @@ type Account struct {
 }
 
 var (
-	ErrAccountCreateFailed = errors.New("account creation fail")
-	ErrAccountByIdFailed   = errors.New("account by id fail")
+	ErrAccountCreateFailed           = errors.New("account creation fail")
+	ErrAccountByIdFailed             = errors.New("account by id fail")
+	ErrAccountInitialBalanceNegative = errors.New("account initial balance negative")
 )
 
 func NewAccountService(repo AccountRepo) *AccountService {
@@ -37,16 +39,22 @@ func NewAccountService(repo AccountRepo) *AccountService {
 }
 
 func (svc *AccountService) Create(ctx context.Context, data AccountCreate) error {
-	var params AccountCreateParams
-	params.AccountId = data.AccountId
-
 	initialBalance, err := money.StringToInt(data.InitialBalance, money.Scale)
 	if err != nil {
 		log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
-		return ErrAccountCreateFailed
+		return money.ErrMoneyParseFail
 	}
-	params.InitialBalance = initialBalance
-	params.ScaleBalance = money.Scale
+
+	if initialBalance < 0 {
+		log.Printf("%s\n", ErrAccountInitialBalanceNegative)
+		return ErrAccountInitialBalanceNegative
+	}
+
+	params := AccountCreateParams{
+		AccountId:    data.AccountId,
+		Balance:      initialBalance,
+		ScaleBalance: money.Scale,
+	}
 
 	if err := svc.repo.Create(ctx, params); err != nil {
 		log.Printf("%s: %s\n", ErrAccountCreateFailed, err)
@@ -62,7 +70,7 @@ func (svc *AccountService) ById(ctx context.Context, accountId int) (Account, er
 		return Account{}, ErrAccountByIdFailed
 	}
 
-	initialBalance := money.IntToString(row.InitialBalance, row.ScaleBalance)
+	initialBalance := money.IntToString(row.Balance, row.ScaleBalance)
 	data := Account{
 		AccountId:      row.AccountId,
 		InitialBalance: initialBalance,

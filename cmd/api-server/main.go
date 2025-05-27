@@ -9,7 +9,7 @@ import (
 	"github.com/gustialfian/transfer-system-golang/internal/db"
 	"github.com/gustialfian/transfer-system-golang/internal/httpserver"
 	"github.com/gustialfian/transfer-system-golang/internal/modules/account"
-	"github.com/jmoiron/sqlx"
+	"github.com/gustialfian/transfer-system-golang/internal/modules/transaction"
 )
 
 func main() {
@@ -17,23 +17,21 @@ func main() {
 
 	db := db.MustNewPostgreSQL(cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresHost, cfg.PostgresDBName)
 
-	handler := newServiceHandler(db)
+	accountRepo := account.NewAccountDB(db)
+	accountSvc := account.NewAccountService(accountRepo)
 
-	server := httpserver.NewMux(httpserver.HttpServerOpt{
-		Addr:    fmt.Sprintf(":%s", cfg.Port),
-		Handler: handler,
-	})
+	transactionRepo := transaction.NewTransactionDB(db)
+	transactionSvc := transaction.NewAccountService(transactionRepo, accountRepo)
 
+	handler := &httpserver.ServiceHandler{
+		Account:     accountSvc,
+		Transaction: transactionSvc,
+	}
+
+	server := httpserver.NewMux(fmt.Sprintf(":%s", cfg.Port), handler)
+
+	log.Printf("listen on :%s\n", cfg.Port)
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
-}
-
-func newServiceHandler(db *sqlx.DB) *httpserver.ServiceHandler {
-	handler := &httpserver.ServiceHandler{}
-
-	accountRepo := account.NewAccountDB(db)
-	handler.Account = account.NewAccountService(accountRepo)
-
-	return handler
 }
