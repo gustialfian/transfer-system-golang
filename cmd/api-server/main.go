@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gustialfian/transfer-system-golang/internal/config"
-	"github.com/gustialfian/transfer-system-golang/internal/db"
 	"github.com/gustialfian/transfer-system-golang/internal/domains/account"
 	"github.com/gustialfian/transfer-system-golang/internal/domains/transaction"
-	"github.com/gustialfian/transfer-system-golang/internal/httpserver"
+	"github.com/gustialfian/transfer-system-golang/internal/infrastructure/config"
+	"github.com/gustialfian/transfer-system-golang/internal/infrastructure/db"
+	"github.com/gustialfian/transfer-system-golang/internal/infrastructure/httpserver"
 )
 
 func main() {
